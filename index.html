@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rota CRM | V21 (Cloud & Security)</title>
+    <title>Rota CRM | V22 (Marketplaces)</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -51,7 +51,7 @@
         .btn-login { width: 100%; padding: 14px; font-size: 1.1rem; border-radius: 10px; margin-top: 10px; }
         .error-msg { color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-top: 15px; display: none; }
         
-        #appContainer { display: none; width: 100%; height: 100%; } /* Esconde o CRM até logar */
+        #appContainer { display: none; width: 100%; height: 100%; } 
 
         /* Layout CRM */
         .sidebar { width: 280px; min-width: 280px; background: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 25px; z-index: 20; border-right: 1px solid rgba(255,255,255,0.05); }
@@ -73,15 +73,15 @@
         .view-section.active { display: block; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Tabela */
+        /* Tabela Aumentada para caber o Marketplace */
         .table-container { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 120px); box-shadow: var(--shadow-lg); transition: 0.3s;}
-        table { width: 100%; min-width: 1750px; border-collapse: separate; border-spacing: 0; }
+        table { width: 100%; min-width: 1950px; border-collapse: separate; border-spacing: 0; }
         th { background: var(--bg-card); padding: 16px 12px; text-align: left; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 2; backdrop-filter: blur(5px); white-space: nowrap;}
         td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;}
         tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: var(--table-hover); }
         
-        .col-cliente { min-width: 200px; } .col-analista { min-width: 170px; } .col-consultor { min-width: 170px; } .col-verba { min-width: 200px; }
+        .col-mkp { min-width: 160px; } .col-cliente { min-width: 200px; } .col-analista { min-width: 170px; } .col-consultor { min-width: 170px; } .col-verba { min-width: 200px; }
         
         .smart-input { width: 100%; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--text-main); transition: all 0.2s ease; font-family: inherit; font-size: 0.9rem; font-weight: 600;}
         .smart-input:hover { background: var(--table-hover); border-color: var(--border); }
@@ -108,7 +108,7 @@
         .btn-danger { background: var(--danger-light); color: var(--danger); }
         .btn-icon { padding: 8px; border-radius: 8px; }
         
-        /* BI, Configs & Modal seguem iguais ao V20 */
+        /* BI, Configs & Modal */
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
         .kpi-card { background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: transform 0.2s; position: relative;}
         .kpi-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -139,7 +139,6 @@
         .log-entry { background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow-sm); }
         .modal-footer { padding: 20px 25px; border-top: 1px solid var(--border); display: flex; gap: 12px; background: var(--bg-card); }
         
-        /* Indicador de Salvamento Realtime */
         .sync-indicator { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: white; padding: 8px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 700; display: none; align-items: center; gap: 8px; z-index: 1000; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
     </style>
 </head>
@@ -202,6 +201,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th class="col-mkp">Marketplace</th>
                                 <th class="col-cliente">Cliente</th>
                                 <th class="col-analista">Analista</th>
                                 <th class="col-consultor">Consultor</th>
@@ -319,12 +319,10 @@
     </div>
 
 <script type="module">
-    // 1. Importações do Firebase SDK (Nuvem em Tempo Real)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // 2. A sua configuração exata
     const firebaseConfig = {
         apiKey: "AIzaSyD0C2sA4pVwrHZhaoxPB_bw3e27bHK66KE",
         authDomain: "crm-marketplace-ef2aa.firebaseapp.com",
@@ -334,12 +332,10 @@
         appId: "1:174369799559:web:d4cf0022298eced74a2722"
     };
 
-    // Inicializa Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Variáveis Globais de Estado
     window.appData = {
         analysts: ["Bruno Marques", "Deborah Belém", "Letícia Rodrigues", "Pedro Paulo"],
         consultants: ["Consultor Padrão", "Estrategista Sênior"],
@@ -348,102 +344,71 @@
         clients: []
     };
     
-    let currentView = 'dashboard'; 
-    let currentCrmId = null; 
-    let myDonutChart = null; let myBarChart = null; let myHistoryChart = null;
-    let isFirstLoad = true; // Impede sobrepor dados na primeira vez
+    let currentView = 'dashboard'; let currentCrmId = null; let myDonutChart = null; let myBarChart = null; let myHistoryChart = null;
+    let isFirstLoad = true; 
     
-    // --- AUTENTICAÇÃO E LOGIN ---
     window.realizarLogin = function() {
-        const e = document.getElementById('emailInput').value;
-        const p = document.getElementById('passwordInput').value;
-        const btn = document.getElementById('btnLogin');
-        const err = document.getElementById('loginError');
-        
+        const e = document.getElementById('emailInput').value; const p = document.getElementById('passwordInput').value;
+        const btn = document.getElementById('btnLogin'); const err = document.getElementById('loginError');
         btn.innerText = "Verificando...";
-        signInWithEmailAndPassword(auth, e, p)
-            .then(() => { err.style.display = 'none'; })
-            .catch((error) => { err.style.display = 'block'; btn.innerText = "Entrar"; });
+        signInWithEmailAndPassword(auth, e, p).then(() => { err.style.display = 'none'; }).catch((error) => { err.style.display = 'block'; btn.innerText = "Entrar"; });
     };
 
-    window.fazerLogout = function() {
-        if(confirm("Deseja realmente sair?")) { signOut(auth); }
-    };
+    window.fazerLogout = function() { if(confirm("Deseja realmente sair?")) { signOut(auth); } };
 
-    // Fica escutando se a pessoa está logada
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Logado: Esconde tela login, mostra App, Puxa dados
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'flex';
-            iniciarTempoReal();
-            initAppUI();
+            document.getElementById('loginScreen').style.display = 'none'; document.getElementById('appContainer').style.display = 'flex';
+            iniciarTempoReal(); initAppUI();
         } else {
-            // Deslogado: Mostra login
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('appContainer').style.display = 'none';
         }
     });
 
-    // --- BANCO DE DADOS EM TEMPO REAL ---
     function iniciarTempoReal() {
         const docRef = doc(db, "crm", "master_data");
-        
-        // onSnapshot é a mágica: Sempre que alguém salvar, essa função roda sozinha!
         onSnapshot(docRef, (documento) => {
             if (documento.exists()) {
                 window.appData = documento.data();
-                
-                // Só atualiza os selects se tiver dado novo
-                populateSelects(); 
-                window.renderAll();
-                
-                // Pisca a notificação de salvamento
+                populateSelects(); window.renderAll();
                 if(!isFirstLoad) {
-                    const ind = document.getElementById('syncIndicator');
-                    ind.style.display = 'flex';
-                    setTimeout(() => ind.style.display = 'none', 2000);
+                    const ind = document.getElementById('syncIndicator'); ind.style.display = 'flex'; setTimeout(() => ind.style.display = 'none', 2000);
                 }
                 isFirstLoad = false;
-            } else {
-                // Se for a primeira vez que entra na vida, salva a estrutura vazia no banco
-                window.saveToFirebase();
-            }
+            } else { window.saveToFirebase(); }
         });
     }
 
     window.saveToFirebase = async function() {
-        try {
-            await setDoc(doc(db, "crm", "master_data"), window.appData);
-        } catch (e) {
-            console.error("Erro ao salvar:", e);
-            alert("Erro de permissão no Firebase. Você configurou as Regras de Segurança?");
-        }
+        try { await setDoc(doc(db, "crm", "master_data"), window.appData); } catch (e) { console.error("Erro ao salvar:", e); }
     }
 
-    // --- LÓGICA DE UI DO CRM (Adaptações) ---
-    // Sempre que antes usávamos save(), agora usamos saveToFirebase()
+    // --- CORES DOS MARKETPLACES ---
+    window.getMkpStyle = function(mkp) {
+        if(mkp === 'Mercado Livre') return 'background-color: #ffe600; color: #2d3277;';
+        if(mkp === 'Shopee') return 'background-color: #ee4d2d; color: #ffffff;';
+        if(mkp === 'Amazon') return 'background-color: #000000; color: #ffffff;';
+        if(mkp === 'Magalu') return 'background-color: #0086ff; color: #ffffff;';
+        if(mkp === 'Leroy Merlin') return 'background-color: #78be20; color: #ffffff;';
+        return 'background-color: var(--bg-body); color: var(--text-main);';
+    }
     
     function initTheme() {
-        const savedTheme = localStorage.getItem('rota_theme_v21');
+        const savedTheme = localStorage.getItem('rota_theme_v22');
         if(savedTheme === 'dark') document.body.classList.add('dark-mode');
         updateThemeUI();
     }
     
     window.toggleTheme = function() {
-        document.body.classList.toggle('dark-mode');
-        localStorage.setItem('rota_theme_v21', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-        updateThemeUI();
-        if(currentView === 'reports') renderCharts(getFilteredClients()); 
+        document.body.classList.toggle('dark-mode'); localStorage.setItem('rota_theme_v22', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        updateThemeUI(); if(currentView === 'reports') renderCharts(getFilteredClients()); 
     }
     
     function updateThemeUI() {
         const isDark = document.body.classList.contains('dark-mode');
         const btn = document.getElementById('btnTheme');
         btn.innerHTML = isDark ? `<i class="fas fa-sun" style="color:#fbbf24"></i> Tema Claro` : `<i class="fas fa-moon"></i> Tema Escuro`;
-        Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
-        Chart.defaults.borderColor = isDark ? '#1e293b' : '#e2e8f0';
-        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = isDark ? '#94a3b8' : '#64748b'; Chart.defaults.borderColor = isDark ? '#1e293b' : '#e2e8f0'; Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     }
 
     const today = new Date(); const day = today.getDate(); const maxDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
@@ -456,40 +421,26 @@
     }
 
     function initAppUI() {
-        initTheme();
-        document.getElementById('pacingDisplay').innerHTML = `Dia ${day} de ${maxDays} ➔ <strong style="color:var(--primary)">${timePct.toFixed(1)}% do mês</strong>`;
+        initTheme(); document.getElementById('pacingDisplay').innerHTML = `Dia ${day} de ${maxDays} ➔ <strong style="color:var(--primary)">${timePct.toFixed(1)}% do mês</strong>`;
     }
 
     function getFilteredClients() {
-        const cliF = document.getElementById('clientFilter').value;
-        const anaF = document.getElementById('analystFilter').value;
-        const conF = document.getElementById('consultantFilter').value;
-        return window.appData.clients.filter(c => {
-            return (cliF === "Todos" || c.client === cliF) && (anaF === "Todos" || c.analyst === anaF) && (conF === "Todos" || c.consultant === conF);
-        });
+        const cliF = document.getElementById('clientFilter').value; const anaF = document.getElementById('analystFilter').value; const conF = document.getElementById('consultantFilter').value;
+        return window.appData.clients.filter(c => { return (cliF === "Todos" || c.client === cliF) && (anaF === "Todos" || c.analyst === anaF) && (conF === "Todos" || c.consultant === conF); });
     }
 
     window.switchTab = function(viewId, btn) {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('view-' + viewId).classList.add('active');
-        currentView = viewId;
-        const titles = { 'dashboard': 'Visão Geral', 'reports': 'Inteligência de Dados', 'settings': 'Configurações do Sistema' };
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); btn.classList.add('active');
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById('view-' + viewId).classList.add('active');
+        currentView = viewId; const titles = { 'dashboard': 'Visão Geral', 'reports': 'Inteligência de Dados', 'settings': 'Configurações do Sistema' };
         document.getElementById('pageTitle').innerText = titles[viewId];
-        renderHeaderActions();
-        if(viewId==='reports') setTimeout(window.renderAll, 50);
-        if(viewId==='settings') window.renderAll();
+        renderHeaderActions(); if(viewId==='reports') setTimeout(window.renderAll, 50); if(viewId==='settings') window.renderAll();
     };
 
-    function renderHeaderActions() {
-        document.getElementById('headerActions').innerHTML = currentView === 'dashboard' ? `<button class="btn btn-primary" onclick="window.addNewClient()"><i class="fas fa-plus"></i> Novo Cliente</button>` : '';
-    }
+    function renderHeaderActions() { document.getElementById('headerActions').innerHTML = currentView === 'dashboard' ? `<button class="btn btn-primary" onclick="window.addNewClient()"><i class="fas fa-plus"></i> Novo Cliente</button>` : ''; }
 
     window.renderAll = function() {
-        if(currentView==='dashboard') renderDashboard();
-        if(currentView==='reports') renderReports();
-        if(currentView==='settings') renderSettings();
+        if(currentView==='dashboard') renderDashboard(); if(currentView==='reports') renderReports(); if(currentView==='settings') renderSettings();
     }
     
     function populateSelects() {
@@ -519,10 +470,14 @@
             const v = parseFloat(item.verba)||0, ma = parseFloat(item.metaAcos)||0, g = parseFloat(item.gasto)||0, r = parseFloat(item.receita)||0;
             const acos = r > 0 ? ((g/r)*100) : 0;
             
+            // Tratamento do Marketplace
+            const mkp = item.marketplace || 'Mercado Livre';
+            const mkpStyle = window.getMkpStyle(mkp);
+            const mkpOptions = ["Mercado Livre", "Shopee", "Amazon", "Magalu", "Leroy Merlin"].map(m => `<option value="${m}" style="background:var(--bg-card); color:var(--text-main);" ${mkp===m?'selected':''}>${m}</option>`).join('');
+
             let statVerba = '';
             if (vt === 'R$') {
-                const pu = v > 0 ? (g/v)*100 : 0;
-                let c = "text-green"; if(pu>timePct) c="text-red"; else if(pu<(timePct-20)) c="text-orange";
+                const pu = v > 0 ? (g/v)*100 : 0; let c = "text-green"; if(pu>timePct) c="text-red"; else if(pu<(timePct-20)) c="text-orange";
                 statVerba = `<span class="usage-badge ${c}">${pu.toFixed(1)}%</span>`;
             } else {
                 let c = "text-green"; if(acos>v) c="text-red";
@@ -537,6 +492,7 @@
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
+                <td><select class="smart-input" style="${mkpStyle} border:none; text-align:center; font-weight:800;" onchange="window.upd(${index},'marketplace',this.value)">${mkpOptions}</select></td>
                 <td><input class="smart-input" style="font-weight:800; font-size:0.95rem; color:var(--text-main);" value="${item.client}" onchange="window.upd(${index},'client',this.value)"></td>
                 <td><select class="smart-input" onchange="window.upd(${index},'analyst',this.value)">${oAna}</select></td>
                 <td><select class="smart-input" onchange="window.upd(${index},'consultant',this.value)">${oCon}</select></td>
@@ -663,7 +619,7 @@
     
     window.addNewClient = function() {
         const ana = document.getElementById('analystFilter').value; const con = document.getElementById('consultantFilter').value;
-        window.appData.clients.unshift({ id: Date.now(), client: "Novo Cliente", analyst: ana==="Todos"?window.appData.analysts[0]:ana, consultant: con==="Todos"?window.appData.consultants[0]:con, verbaType: "R$", verba: 0, metaAcos: 0, gasto: 0, receita: 0, progress: 0, logs: [] });
+        window.appData.clients.unshift({ id: Date.now(), marketplace: "Mercado Livre", client: "Novo Cliente", analyst: ana==="Todos"?window.appData.analysts[0]:ana, consultant: con==="Todos"?window.appData.consultants[0]:con, verbaType: "R$", verba: 0, metaAcos: 0, gasto: 0, receita: 0, progress: 0, logs: [] });
         window.saveToFirebase();
     }
     
@@ -689,13 +645,14 @@
     }
 
     window.exportExcel = function() {
-        let csv = "\uFEFFCliente;Analista;Consultor;Tipo Verba;Verba;Gasto;Receita;Meta ACOS;ACOS Atual;Progresso\n";
+        let csv = "\uFEFFMarketplace;Cliente;Analista;Consultor;Tipo Verba;Verba;Gasto;Receita;Meta ACOS;ACOS Atual;Progresso\n";
         getFilteredClients().forEach(c => {
             const fmt = n => (parseFloat(n)||0).toFixed(2).replace('.',',');
             const vt = c.verbaType || 'R$';
             const v=parseFloat(c.verba)||0, g=parseFloat(c.gasto)||0, r=parseFloat(c.receita)||0, ma=parseFloat(c.metaAcos)||0;
             const ac = r>0?((g/r)*100).toFixed(1):"0.0";
-            csv += `"${c.client}";"${c.analyst}";"${c.consultant || ''}";"${vt}";"${fmt(v)}";"${fmt(g)}";"${fmt(r)}";"${fmt(ma)}%";"${ac.replace('.',',')}%";"${fmt(c.progress)}"\n`;
+            const mkp = c.marketplace || 'Mercado Livre';
+            csv += `"${mkp}";"${c.client}";"${c.analyst}";"${c.consultant || ''}";"${vt}";"${fmt(v)}";"${fmt(g)}";"${fmt(r)}";"${fmt(ma)}%";"${ac.replace('.',',')}%";"${fmt(c.progress)}"\n`;
         });
         const b = new Blob([csv], {type:'text/csv;charset=utf-8;'});
         const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = `Rota_CRM_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.csv`;
