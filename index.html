@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rota CRM | V22 (Marketplaces)</title>
+    <title>Rota CRM | V23 (Edição & Fixados)</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -73,7 +73,7 @@
         .view-section.active { display: block; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Tabela Aumentada para caber o Marketplace */
+        /* Tabela */
         .table-container { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 120px); box-shadow: var(--shadow-lg); transition: 0.3s;}
         table { width: 100%; min-width: 1950px; border-collapse: separate; border-spacing: 0; }
         th { background: var(--bg-card); padding: 16px 12px; text-align: left; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 2; backdrop-filter: blur(5px); white-space: nowrap;}
@@ -136,7 +136,11 @@
         .chip { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); padding: 8px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .chip:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); transform: translateY(-2px); }
         .chip-add { background: transparent; border: 1px dashed var(--text-muted); color: var(--text-muted); }
-        .log-entry { background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+        
+        .log-entry { padding: 20px; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow-sm); transition: 0.3s; }
+        .log-action-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+        .log-action-btn:hover { background: rgba(0,0,0,0.05); }
+
         .modal-footer { padding: 20px 25px; border-top: 1px solid var(--border); display: flex; gap: 12px; background: var(--bg-card); }
         
         .sync-indicator { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: white; padding: 8px 16px; border-radius: 30px; font-size: 0.8rem; font-weight: 700; display: none; align-items: center; gap: 8px; z-index: 1000; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
@@ -371,6 +375,13 @@
             if (documento.exists()) {
                 window.appData = documento.data();
                 populateSelects(); window.renderAll();
+                
+                // Se o modal do CRM estiver aberto, atualiza as mensagens ao vivo
+                if (currentCrmId !== null && document.getElementById('crmModal').classList.contains('show')) {
+                    const activeClient = window.appData.clients.find(c => c.id === currentCrmId);
+                    if (activeClient) window.renderLogs(activeClient.logs);
+                }
+
                 if(!isFirstLoad) {
                     const ind = document.getElementById('syncIndicator'); ind.style.display = 'flex'; setTimeout(() => ind.style.display = 'none', 2000);
                 }
@@ -394,13 +405,13 @@
     }
     
     function initTheme() {
-        const savedTheme = localStorage.getItem('rota_theme_v22');
+        const savedTheme = localStorage.getItem('rota_theme_v23');
         if(savedTheme === 'dark') document.body.classList.add('dark-mode');
         updateThemeUI();
     }
     
     window.toggleTheme = function() {
-        document.body.classList.toggle('dark-mode'); localStorage.setItem('rota_theme_v22', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        document.body.classList.toggle('dark-mode'); localStorage.setItem('rota_theme_v23', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
         updateThemeUI(); if(currentView === 'reports') renderCharts(getFilteredClients()); 
     }
     
@@ -470,7 +481,6 @@
             const v = parseFloat(item.verba)||0, ma = parseFloat(item.metaAcos)||0, g = parseFloat(item.gasto)||0, r = parseFloat(item.receita)||0;
             const acos = r > 0 ? ((g/r)*100) : 0;
             
-            // Tratamento do Marketplace
             const mkp = item.marketplace || 'Mercado Livre';
             const mkpStyle = window.getMkpStyle(mkp);
             const mkpOptions = ["Mercado Livre", "Shopee", "Amazon", "Magalu", "Leroy Merlin"].map(m => `<option value="${m}" style="background:var(--bg-card); color:var(--text-main);" ${mkp===m?'selected':''}>${m}</option>`).join('');
@@ -659,11 +669,12 @@
         document.body.appendChild(l); l.click(); document.body.removeChild(l);
     }
 
+    // --- NOVA LÓGICA DO DIÁRIO DE BORDO ---
     window.openCrm = function(id) {
         currentCrmId = id; const client = window.appData.clients.find(c => c.id===id);
         document.getElementById('modalClientName').innerText = `Diário: ${client.client}`;
         const overlay = document.getElementById('crmModal'); overlay.style.display = 'flex'; setTimeout(() => overlay.classList.add('show'), 10);
-        renderTemplates(); renderLogs(client.logs); setTimeout(()=>document.getElementById('crmInput').focus(), 300);
+        renderTemplates(); window.renderLogs(client.logs); setTimeout(()=>document.getElementById('crmInput').focus(), 300);
     }
     
     function renderTemplates() {
@@ -673,24 +684,72 @@
     }
     window.addNewTemplate = function() { const t = prompt("Novo modelo:"); if(t && t.trim() !== '') { window.appData.templates.push(t.trim()); window.saveToFirebase(); renderTemplates(); } }
     
-    function renderLogs(lgs) {
+    // Agora separa Fixados de Normais
+    window.renderLogs = function(lgs) {
         const d = document.getElementById('crmLogs'); d.innerHTML = '';
-        if(lgs.length === 0) { d.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px 20px; font-weight:600;"><i class="fas fa-folder-open" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i><br>Nenhum registro encontrado.</div>'; return; }
-        for (let i = lgs.length - 1; i >= 0; i--) {
-            d.innerHTML += `<div class="log-entry"><div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:12px;"><div><span style="font-weight:800; color:var(--primary); font-size:0.95rem;"><i class="fas fa-user-circle" style="margin-right:6px;"></i>${lgs[i].user}</span></div><span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; background:var(--bg-body); padding:4px 8px; border-radius:6px;">${lgs[i].date}</span></div><div style="color:var(--text-main); font-size:0.95rem; line-height:1.5; font-weight:500;">${lgs[i].msg}</div></div>`;
-        }
+        if(!lgs || lgs.length === 0) { d.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px 20px; font-weight:600;"><i class="fas fa-folder-open" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i><br>Nenhum registro encontrado.</div>'; return; }
+        
+        let mapped = lgs.map((log, i) => ({...log, originalIndex: i}));
+        let pinned = mapped.filter(l => l.pinned).reverse();
+        let unpinned = mapped.filter(l => !l.pinned).reverse();
+
+        const buildHtml = (lista, isPinned) => {
+            lista.forEach(l => {
+                const pinBg = isPinned ? 'background: var(--warning-light); border: 1px solid #fcd34d;' : 'background: var(--bg-card); border: 1px solid var(--border);';
+                const pinColor = isPinned ? 'color: var(--warning);' : 'color: var(--text-muted);';
+                
+                d.innerHTML += `
+                <div class="log-entry" style="${pinBg}">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:12px;">
+                        <div>
+                            <span style="font-weight:800; color:var(--primary); font-size:0.95rem;"><i class="fas fa-user-circle" style="margin-right:6px;"></i>${l.user}</span>
+                            ${isPinned ? '<span style="margin-left:8px; font-size:0.7rem; background:var(--warning); color:#fff; padding:2px 6px; border-radius:4px; font-weight:800;"><i class="fas fa-thumbtack"></i> FIXADO</span>' : ''}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">${l.date}</span>
+                            <button class="log-action-btn" onclick="window.editLog(${l.originalIndex})" title="Editar Mensagem"><i class="fas fa-edit"></i></button>
+                            <button class="log-action-btn" onclick="window.togglePinLog(${l.originalIndex})" style="${pinColor}" title="Fixar/Desfixar no Topo"><i class="fas fa-thumbtack"></i></button>
+                        </div>
+                    </div>
+                    <div style="color:var(--text-main); font-size:0.95rem; line-height:1.5; font-weight:500;">${l.msg}</div>
+                </div>`;
+            });
+        };
+
+        buildHtml(pinned, true);
+        buildHtml(unpinned, false);
     }
     
+    // Funções de Edição e Fixação
+    window.editLog = function(index) {
+        const client = window.appData.clients.find(x => x.id === currentCrmId);
+        const currentMsg = client.logs[index].msg;
+        const newMsg = prompt("Edite sua mensagem abaixo:", currentMsg);
+        
+        if (newMsg !== null && newMsg.trim() !== '') {
+            client.logs[index].msg = newMsg.trim();
+            window.saveToFirebase();
+            window.renderLogs(client.logs);
+        }
+    }
+
+    window.togglePinLog = function(index) {
+        const client = window.appData.clients.find(x => x.id === currentCrmId);
+        client.logs[index].pinned = !client.logs[index].pinned;
+        window.saveToFirebase();
+        window.renderLogs(client.logs);
+    }
+
     window.useTemplate = function(i) { document.getElementById('crmInput').value = window.appData.templates[i]; document.getElementById('crmInput').focus(); }
     window.saveLog = function() {
         const t = document.getElementById('crmInput').value.trim(); if(!t) return;
         const anaF = document.getElementById('analystFilter').value; const u = anaF === "Todos" ? "Equipe" : anaF.split(' ')[0];
         const c = window.appData.clients.find(x => x.id===currentCrmId);
-        c.logs.push({date: new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), user: u, msg: t});
-        document.getElementById('crmInput').value=''; window.saveToFirebase(); renderLogs(c.logs);
+        c.logs.push({date: new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), user: u, msg: t, pinned: false});
+        document.getElementById('crmInput').value=''; window.saveToFirebase(); window.renderLogs(c.logs);
     }
     
-    window.closeModal = function() { const overlay = document.getElementById('crmModal'); overlay.classList.remove('show'); setTimeout(() => overlay.style.display='none', 300); }
+    window.closeModal = function() { const overlay = document.getElementById('crmModal'); overlay.classList.remove('show'); setTimeout(() => overlay.style.display='none', 300); currentCrmId = null; }
     window.handleEnter = function(e) { if(e.key === 'Enter') window.saveLog(); }
 
 </script>
