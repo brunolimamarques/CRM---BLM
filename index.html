@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rota CRM | V23 (Edição & Fixados)</title>
+    <title>Rota CRM | V24 (Edição & Horários)</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -73,7 +73,7 @@
         .view-section.active { display: block; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Tabela */
+        /* Tabela Aumentada */
         .table-container { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 120px); box-shadow: var(--shadow-lg); transition: 0.3s;}
         table { width: 100%; min-width: 1950px; border-collapse: separate; border-spacing: 0; }
         th { background: var(--bg-card); padding: 16px 12px; text-align: left; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 2; backdrop-filter: blur(5px); white-space: nowrap;}
@@ -376,7 +376,6 @@
                 window.appData = documento.data();
                 populateSelects(); window.renderAll();
                 
-                // Se o modal do CRM estiver aberto, atualiza as mensagens ao vivo
                 if (currentCrmId !== null && document.getElementById('crmModal').classList.contains('show')) {
                     const activeClient = window.appData.clients.find(c => c.id === currentCrmId);
                     if (activeClient) window.renderLogs(activeClient.logs);
@@ -405,13 +404,13 @@
     }
     
     function initTheme() {
-        const savedTheme = localStorage.getItem('rota_theme_v23');
+        const savedTheme = localStorage.getItem('rota_theme_v24');
         if(savedTheme === 'dark') document.body.classList.add('dark-mode');
         updateThemeUI();
     }
     
     window.toggleTheme = function() {
-        document.body.classList.toggle('dark-mode'); localStorage.setItem('rota_theme_v23', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        document.body.classList.toggle('dark-mode'); localStorage.setItem('rota_theme_v24', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
         updateThemeUI(); if(currentView === 'reports') renderCharts(getFilteredClients()); 
     }
     
@@ -684,7 +683,6 @@
     }
     window.addNewTemplate = function() { const t = prompt("Novo modelo:"); if(t && t.trim() !== '') { window.appData.templates.push(t.trim()); window.saveToFirebase(); renderTemplates(); } }
     
-    // Agora separa Fixados de Normais
     window.renderLogs = function(lgs) {
         const d = document.getElementById('crmLogs'); d.innerHTML = '';
         if(!lgs || lgs.length === 0) { d.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px 20px; font-weight:600;"><i class="fas fa-folder-open" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i><br>Nenhum registro encontrado.</div>'; return; }
@@ -698,6 +696,9 @@
                 const pinBg = isPinned ? 'background: var(--warning-light); border: 1px solid #fcd34d;' : 'background: var(--bg-card); border: 1px solid var(--border);';
                 const pinColor = isPinned ? 'color: var(--warning);' : 'color: var(--text-muted);';
                 
+                // Selo de Edição
+                const editedInfo = l.editedAt ? `<div style="font-size:0.65rem; color:#94a3b8; font-style:italic; margin-top:2px;">(Editado em ${l.editedAt})</div>` : '';
+                
                 d.innerHTML += `
                 <div class="log-entry" style="${pinBg}">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:12px;">
@@ -705,9 +706,12 @@
                             <span style="font-weight:800; color:var(--primary); font-size:0.95rem;"><i class="fas fa-user-circle" style="margin-right:6px;"></i>${l.user}</span>
                             ${isPinned ? '<span style="margin-left:8px; font-size:0.7rem; background:var(--warning); color:#fff; padding:2px 6px; border-radius:4px; font-weight:800;"><i class="fas fa-thumbtack"></i> FIXADO</span>' : ''}
                         </div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">${l.date}</span>
-                            <button class="log-action-btn" onclick="window.editLog(${l.originalIndex})" title="Editar Mensagem"><i class="fas fa-edit"></i></button>
+                        <div style="display:flex; align-items:flex-start; gap:10px;">
+                            <div style="text-align:right;">
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">${l.date}</div>
+                                ${editedInfo}
+                            </div>
+                            <button class="log-action-btn" onclick="window.editLog(${l.originalIndex})" style="color: #cbd5e1;" title="Editar Mensagem"><i class="fas fa-edit"></i></button>
                             <button class="log-action-btn" onclick="window.togglePinLog(${l.originalIndex})" style="${pinColor}" title="Fixar/Desfixar no Topo"><i class="fas fa-thumbtack"></i></button>
                         </div>
                     </div>
@@ -720,14 +724,14 @@
         buildHtml(unpinned, false);
     }
     
-    // Funções de Edição e Fixação
     window.editLog = function(index) {
         const client = window.appData.clients.find(x => x.id === currentCrmId);
         const currentMsg = client.logs[index].msg;
         const newMsg = prompt("Edite sua mensagem abaixo:", currentMsg);
         
-        if (newMsg !== null && newMsg.trim() !== '') {
+        if (newMsg !== null && newMsg.trim() !== '' && newMsg.trim() !== currentMsg) {
             client.logs[index].msg = newMsg.trim();
+            client.logs[index].editedAt = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
             window.saveToFirebase();
             window.renderLogs(client.logs);
         }
